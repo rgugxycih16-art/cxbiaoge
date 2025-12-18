@@ -3,36 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数据追踪 - 全功能版 (含编辑)</title>
+    <title>数据追踪 - 经典增强版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f0fdfa', 100: '#ccfbf1', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e' },
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* 打印/PDF 专用样式 */
+        /* 全局字体与背景 - 采用第二版的温馨风格 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        body { 
+            font-family: 'Noto Sans SC', sans-serif; 
+            background: linear-gradient(135deg, #fdfbf7 0%, #eefcfc 100%); 
+        }
+
+        /* --- 核心表格样式：恢复到第一版（紧凑、边框） --- */
+        
+        /* 打印/PDF 专用样式 (完全保留第一版逻辑) */
         @media print {
             @page { size: A4 landscape; margin: 5mm; }
             body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none !important; }
             .print-visible { display: block !important; }
             
-            .card { box-shadow: none; border: none; }
+            .card { box-shadow: none; border: none; background: transparent; }
             
-            /* 血常规表格 - 正常字体 */
+            /* 强制表格显示边框，字体变小 */
             #table-blood { font-size: 9pt; width: 100%; border-collapse: collapse; }
-            #table-blood th, #table-blood td { padding: 3px 4px; border: 1px solid #999; text-align: center; }
+            #table-blood th, #table-blood td { padding: 3px 4px; border: 1px solid #666; text-align: center; }
             
-            /* 肿标/肝肾表格 - 更小字体和紧凑布局 */
-            #table-comp { font-size: 6.5pt; width: 100%; border-collapse: collapse; }
-            #table-comp th, #table-comp td { padding: 2px 3px; border: 1px solid #999; text-align: center; white-space: nowrap; }
-            #table-comp th { font-size: 6pt; }
+            #table-comp { font-size: 7pt; width: 100%; border-collapse: collapse; }
+            #table-comp th, #table-comp td { padding: 2px 3px; border: 1px solid #666; text-align: center; white-space: nowrap; }
+            #table-comp th { font-size: 7pt; }
             
-            /* 固定日期和方案列宽度防止重叠 */
-            #table-comp td:nth-child(2),
-            #table-comp th:nth-child(2) { min-width: 65px !important; }
-            #table-comp td:nth-child(3),
-            #table-comp th:nth-child(3) { min-width: 60px !important; }
-            
-            /* 强制背景色 */
+            /* 强制背景色 (第一版的高对比度逻辑) */
             .bg-red-100 { background-color: #fee2e2 !important; }
             .bg-red-200 { background-color: #fecaca !important; }
             .bg-red-400 { background-color: #f87171 !important; color: white !important; }
@@ -41,182 +57,202 @@
             .bg-blue-200 { background-color: #bfdbfe !important; }
             .bg-blue-400 { background-color: #60a5fa !important; color: white !important; }
             .bg-blue-600 { background-color: #2563eb !important; color: white !important; }
-            .bg-purple-50 { background-color: #faf5ff !important; }
-            .bg-yellow-50 { background-color: #fefce8 !important; }
             
-            .sticky-col { position: static !important; border-right: 1px solid #999 !important; }
+            .sticky-col { position: static !important; border-right: 1px solid #666 !important; }
             .custom-scrollbar { overflow: visible !important; }
         }
-        
-        /* 打印提示样式 */
-        .print-tip { display: none; }
-        @media screen {
-            .print-tip { display: block; }
-        }
-        
+
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         
-        .tab-active { background-color: #2563eb; color: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .tab-inactive { background-color: white; color: #4b5563; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .sticky-col { position: sticky; left: 0; z-index: 10; background-color: white; border-right: 1px solid #e5e7eb; }
+        .sticky-col { position: sticky; left: 0; z-index: 10; background-color: white; border-right: 1px solid #e2e8f0; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans text-gray-800 pb-20">
+<body class="min-h-screen pb-20 text-slate-700">
 
-    <div class="max-w-7xl mx-auto p-3 md:p-6 space-y-6">
+    <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i data-lucide="clipboard-edit" class="text-blue-600"></i> 数据追踪 - 全功能版
-                </h1>
-                <p class="text-gray-500 text-sm mt-1">支持编辑、自定义指标、PDF 导出及异常值热力分析</p>
-            </div>
-            <div class="flex flex-wrap gap-2 no-print">
-                <button onclick="openSettings()" class="flex items-center gap-1 px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm transition-colors shadow-sm">
-                    <i data-lucide="settings-2" class="w-4 h-4"></i> 指标管理
-                </button>
-                <button onclick="exportToImage()" class="flex items-center gap-1 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-bold shadow-md transition-colors">
-                    <i data-lucide="image" class="w-4 h-4"></i> 生成图片
-                </button>
-                <div class="relative group">
-                    <button onclick="window.print()" class="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm shadow-sm transition-colors">
-                        <i data-lucide="printer" class="w-4 h-4"></i> 打印 / PDF
-                    </button>
-                    <div class="absolute top-full right-0 mt-1 w-64 bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-800 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                        <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
-                        <strong>打印提示：</strong>请在打印设置中选择"横向"方向，缩放比例可设为"适合纸张"或 80-90%
-                    </div>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 no-print fade-in">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2 rounded-xl shadow-soft text-brand-600">
+                    <i data-lucide="clipboard-edit" class="w-6 h-6"></i>
                 </div>
-                <button onclick="exportToCSV()" class="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm shadow-sm transition-colors">
-                    <i data-lucide="download" class="w-4 h-4"></i> 导出CSV
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">数据追踪 <span class="text-sm font-normal text-slate-400 ml-2">经典功能版</span></h1>
+                </div>
+            </div>
+            
+            <!-- 顶部功能按钮组 -->
+            <div class="flex flex-wrap items-center gap-2.5 no-print bg-white/50 p-1.5 rounded-2xl border border-white/50 backdrop-blur-sm">
+                <!-- 设置按钮 -->
+                <button onclick="openSettings()" class="flex items-center gap-1.5 px-4 py-2 bg-white text-slate-600 rounded-xl hover:bg-slate-50 text-sm font-medium shadow-soft transition-all border border-slate-100 group">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors"></i> 设置
+                </button>
+
+                <!-- 分割线 -->
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+                <!-- 存为图片按钮 -->
+                <button onclick="exportToImage()" class="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 text-sm font-medium transition-all">
+                    <i data-lucide="image" class="w-4 h-4"></i> 存为图片
+                </button>
+
+                <!-- 打印按钮 -->
+                <button onclick="window.print()" class="flex items-center gap-1.5 px-4 py-2 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 text-sm font-medium transition-all">
+                    <i data-lucide="printer" class="w-4 h-4"></i> 打印
+                </button>
+
+                <!-- 导出CSV按钮 -->
+                <button onclick="exportToCSV()" class="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 text-sm font-medium transition-all">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 导出CSV
                 </button>
             </div>
         </div>
 
         <!-- Settings Modal (Config) -->
-        <div id="settings-modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-2 no-print fade-in backdrop-blur-sm">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl h-[95vh] flex flex-col overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-gray-50 shrink-0">
-                    <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i> 指标管理控制台</h2>
-                    <button onclick="closeSettings()" class="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 no-print fade-in">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden border border-white/50">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="sliders" class="w-5 h-5 text-brand-600"></i> 指标管理控制台</h2>
+                    <button onclick="closeSettings()" class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
-                <div class="flex-1 overflow-y-auto bg-gray-50 p-4">
-                    <div class="flex justify-center mb-4">
-                        <div class="bg-white p-1 rounded-lg border border-gray-200 shadow-sm inline-flex">
-                            <button onclick="switchSettingsTab('blood')" id="set-tab-blood" class="px-4 py-1.5 rounded-md font-medium text-sm transition-all">血常规</button>
-                            <button onclick="switchSettingsTab('comp')" id="set-tab-comp" class="px-4 py-1.5 rounded-md font-medium text-sm transition-all">肿标/肝肾</button>
+                <div class="flex-1 overflow-y-auto bg-slate-50 p-6">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-white p-1 rounded-xl border border-slate-200 shadow-sm inline-flex">
+                            <button onclick="switchSettingsTab('blood')" id="set-tab-blood" class="px-5 py-2 rounded-lg font-medium text-sm transition-all">血常规</button>
+                            <button onclick="switchSettingsTab('comp')" id="set-tab-comp" class="px-5 py-2 rounded-lg font-medium text-sm transition-all">肿标/肝肾</button>
                         </div>
                     </div>
                     <div id="config-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
-                    <div class="mt-6 bg-white border border-blue-100 rounded-lg shadow-sm p-3">
-                        <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2 text-sm"><i data-lucide="plus-square" class="w-4 h-4 text-blue-500"></i> 添加新指标</h3>
-                        <div class="flex flex-col lg:flex-row gap-2 items-end">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 w-full">
-                                <input id="new-field-label" type="text" placeholder="名称 (如 AFP)" class="w-full p-2 bg-gray-50 border border-gray-200 rounded text-xs outline-none">
+                    
+                    <!-- 添加区域 -->
+                    <div class="mt-6 bg-white border border-dashed border-slate-300 rounded-xl p-4">
+                        <h3 class="font-bold text-slate-700 mb-3 flex items-center gap-2 text-sm"><i data-lucide="plus-square" class="w-4 h-4 text-brand-500"></i> 添加新指标</h3>
+                        <div class="flex flex-col lg:flex-row gap-3 items-end">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+                                <input id="new-field-label" type="text" placeholder="名称 (如 AFP)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-500">
                                 <div id="new-field-group-container">
-                                    <select id="new-field-group" class="w-full p-2 bg-gray-50 border border-gray-200 rounded text-xs outline-none">
-                                        <option value="肿瘤标记物">肿瘤标记物</option><option value="肝功能">肝功能</option><option value="肾功能">肾功能</option><option value="其他">其他</option>
+                                    <select id="new-field-group" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-500">
+                                        <option value="肿瘤标志物">肿瘤标志物</option><option value="肝功能">肝功能</option><option value="肾功能">肾功能</option><option value="其他">其他</option>
                                     </select>
                                 </div>
-                                <input id="new-field-min" type="number" step="0.01" placeholder="下限 (Min)" class="w-full p-2 bg-gray-50 border border-gray-200 rounded text-xs outline-none">
-                                <input id="new-field-max" type="number" step="0.01" placeholder="上限 (Max)" class="w-full p-2 bg-gray-50 border border-gray-200 rounded text-xs outline-none">
+                                <input id="new-field-min" type="number" step="0.01" placeholder="下限 (Min)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-500">
+                                <input id="new-field-max" type="number" step="0.01" placeholder="上限 (Max)" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-500">
                             </div>
-                            <button onclick="addNewField()" class="w-full lg:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-bold shadow-sm shrink-0">添加</button>
+                            <button onclick="addNewField()" class="w-full lg:w-auto px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold shadow-sm shrink-0 transition-colors">添加</button>
                         </div>
                     </div>
                 </div>
-                <div class="p-3 border-t border-gray-200 bg-white flex justify-between items-center shrink-0">
-                    <button onclick="resetToDefault()" class="text-xs text-red-500 hover:text-red-700 flex items-center gap-1">恢复默认</button>
-                    <div class="flex gap-2">
-                        <button onclick="closeSettings()" class="px-4 py-1.5 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">取消</button>
-                        <button onclick="saveSettings()" class="px-4 py-1.5 bg-gray-800 text-white rounded hover:bg-gray-900 text-sm font-bold">保存</button>
+                <div class="p-4 border-t border-slate-100 bg-white flex justify-between items-center shrink-0">
+                    <button onclick="resetToDefault()" class="text-xs text-rose-500 hover:text-rose-700 flex items-center gap-1">恢复默认设置</button>
+                    <div class="flex gap-3">
+                        <button onclick="closeSettings()" class="px-5 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium">取消</button>
+                        <button onclick="saveSettings()" class="px-5 py-2 bg-brand-600 text-white rounded-xl hover:bg-brand-700 text-sm font-bold shadow-soft">保存</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Tabs -->
-        <div class="flex rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white w-fit no-print">
-            <button id="tab-blood" onclick="switchTab('blood')" class="flex items-center gap-2 px-6 py-3 font-medium transition-colors tab-active">
+        <!-- Main Tabs - 标签页样式 -->
+        <div class="bg-slate-100 p-1.5 rounded-2xl flex gap-1 w-full max-w-md no-print shadow-inner">
+            <!-- 血常规按钮 -->
+            <button id="tab-blood" onclick="switchTab('blood')" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative overflow-hidden bg-white text-brand-600 shadow-soft">
                 <i data-lucide="droplet" class="w-4 h-4"></i> 血常规
             </button>
-            <button id="tab-comp" onclick="switchTab('comp')" class="flex items-center gap-2 px-6 py-3 font-medium transition-colors tab-inactive">
-                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> 肿标/肝肾功能
+
+            <!-- 肿标/肝肾功能按钮 -->
+            <button id="tab-comp" onclick="switchTab('comp')" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50">
+                <i data-lucide="microscope" class="w-4 h-4"></i> 肿标 / 肝肾功能
             </button>
         </div>
 
-        <!-- Input Form -->
-        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 no-print card">
-            <div class="flex items-center justify-between w-full mb-4">
-                <button onclick="toggleForm()" class="flex items-center gap-2 text-left group">
-                    <span class="font-semibold text-blue-800 flex items-center gap-2">
-                        <span class="bg-blue-100 p-1 rounded-full text-blue-600 group-hover:bg-blue-200 transition-colors">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                        </span>
-                        <span id="form-toggle-text">录入新数据</span>
-                    </span>
-                    <i data-lucide="chevron-down" id="form-icon" class="text-gray-400 transition-transform duration-300"></i>
-                </button>
+        <!-- Input Form - 折叠面板 -->
+        <div class="bg-white rounded-2xl shadow-soft border border-slate-100 no-print card overflow-hidden">
+            <!-- 录入新数据 (点击展开/收起) - 包含动画类 -->
+            <div class="px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 transition-colors" onclick="toggleForm()">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-600">
+                        <i data-lucide="plus" class="w-5 h-5 transition-transform duration-300" id="form-icon-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-700 text-sm" id="form-title">录入新数据</h3>
+                        <p class="text-xs text-slate-400">点击展开/收起表单</p>
+                    </div>
+                </div>
                 
-                <!-- Cancel Edit Button (Initially Hidden) -->
-                <button id="cancel-edit-btn" onclick="cancelEdit()" class="hidden text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full transition-colors">
-                    <i data-lucide="x-circle" class="w-4 h-4"></i> 取消编辑
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- 取消编辑按钮 (隐藏状态) -->
+                    <button id="cancel-edit-btn" onclick="event.stopPropagation(); cancelEdit()" class="hidden px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-xs font-medium hover:bg-rose-100 transition-colors flex items-center gap-1">
+                        <i data-lucide="x" class="w-3 h-3"></i> 取消编辑
+                    </button>
+                    <!-- 箭头图标 - 包含动画类 -->
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-300 transition-transform duration-300" id="form-chevron"></i>
+                </div>
             </div>
 
-            <form id="dataForm" class="hidden border-t border-gray-100 pt-4 fade-in" onsubmit="handleFormSubmit(event)">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-100">
-                    <div class="space-y-1"><label class="text-xs font-semibold text-gray-500">周期</label><input required name="cycle" type="text" placeholder="例: 1" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"></div>
-                    <div class="space-y-1"><label class="text-xs font-semibold text-gray-500">日期</label><input required name="date" type="date" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"></div>
-                    <div class="space-y-1"><label class="text-xs font-semibold text-gray-500">化疗方案</label><input name="scheme" type="text" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none"></div>
+            <form id="dataForm" class="hidden border-t border-slate-100 p-5 fade-in bg-slate-50/30" onsubmit="handleFormSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 pb-4 border-b border-slate-100">
+                    <div class="space-y-1"><label class="text-xs font-bold text-slate-500">周期</label><input required name="cycle" type="text" placeholder="例: 1" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500/50 outline-none transition-all"></div>
+                    <div class="space-y-1"><label class="text-xs font-bold text-slate-500">日期</label><input required name="date" type="date" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500/50 outline-none transition-all text-slate-600"></div>
+                    <div class="space-y-1"><label class="text-xs font-bold text-slate-500">化疗方案</label><input name="scheme" type="text" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500/50 outline-none transition-all"></div>
                 </div>
                 <div id="input-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <label class="text-xs font-semibold text-gray-500 mb-1">备注</label>
-                    <input name="remarks" type="text" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <div class="mt-4 pt-4 border-t border-slate-100">
+                    <label class="text-xs font-bold text-slate-500 mb-1">备注</label>
+                    <input name="remarks" type="text" class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500/50 outline-none transition-all">
                 </div>
                 <div class="mt-6 flex justify-end gap-2">
-                    <button id="submit-btn" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded shadow-sm font-medium transition-colors">保存数据</button>
+                    <!-- 保存按钮 -->
+                    <button id="submit-btn" type="submit" class="w-full md:w-auto px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-500/30 font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> 保存记录
+                    </button>
                 </div>
             </form>
         </div>
 
-        <!-- Data Tables -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden card">
+        <!-- Data Tables - 恢复第一版逻辑（紧凑表格） -->
+        <div class="bg-white rounded-2xl shadow-soft border border-slate-200 overflow-hidden card">
             
-            <!-- Legend -->
-            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 text-xs flex flex-wrap gap-4 text-gray-600 items-center justify-center sm:justify-start no-print">
-                <span class="font-bold mr-2">异常热力说明：</span>
-                <div class="flex items-center gap-2 border-r border-gray-300 pr-4">
-                    <span class="text-[10px] text-gray-500">偏高:</span>
-                    <span class="px-2 py-0.5 rounded bg-red-100 text-red-800 text-[10px]">轻微</span>→
-                    <span class="px-2 py-0.5 rounded bg-red-400 text-white text-[10px]">严重</span>→
-                    <span class="px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold">极高</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-gray-500">偏低:</span>
-                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px]">轻微</span>→
-                    <span class="px-2 py-0.5 rounded bg-blue-400 text-white text-[10px]">严重</span>→
-                    <span class="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-bold">极低</span>
-                </div>
+            <!-- 热力说明区域 -->
+            <div class="px-3 py-2 bg-gray-50 border-b border-gray-200 text-[10px] flex flex-wrap gap-3 text-gray-600 no-print">
+                <span class="font-bold">热力说明:</span>
+                
+                <!-- 轻微高 (浅红色块) -->
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded bg-red-100"></span>轻微高
+                </span>
+                
+                <!-- 严重高 (深红色块) -->
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded bg-red-400"></span>严重高
+                </span>
+                
+                <span class="text-gray-300">|</span>
+                
+                <!-- 轻微低 (浅蓝色块) -->
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded bg-blue-100"></span>轻微低
+                </span>
+                
+                <!-- 严重低 (深蓝色块) -->
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded bg-blue-400"></span>严重低
+                </span>
             </div>
 
             <div class="overflow-x-auto custom-scrollbar">
-                <table id="table-blood" class="w-full text-sm text-left hidden">
-                    <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200"><tr id="thead-blood-row"></tr></thead>
-                    <tbody id="tbody-blood" class="divide-y divide-gray-100"></tbody>
+                <table id="table-blood" class="w-full text-sm text-left hidden border-collapse">
+                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200"><tr id="thead-blood-row"></tr></thead>
+                    <tbody id="tbody-blood" class="divide-y divide-slate-100"></tbody>
                 </table>
-                <table id="table-comp" class="w-full text-xs text-left hidden text-center">
-                    <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200"><tr id="thead-comp-row-1"></tr><tr id="thead-comp-row-2"></tr></thead>
-                    <tbody id="tbody-comp" class="divide-y divide-gray-100"></tbody>
+                <table id="table-comp" class="w-full text-xs text-left hidden text-center border-collapse">
+                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200"><tr id="thead-comp-row-1"></tr><tr id="thead-comp-row-2"></tr></thead>
+                    <tbody id="tbody-comp" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
         </div>
@@ -224,7 +260,8 @@
     </div>
 
     <script>
-        // --- Default Config ---
+        // --- 核心逻辑 ---
+        
         const DEFAULT_CONFIG = {
             blood: [
                 { key: 'wbc', label: '白细胞 (WBC)', min: 3.5, max: 9.5 },
@@ -233,13 +270,13 @@
                 { key: 'plt', label: '血小板 (PLT)', min: 100, max: 300 }
             ],
             comp: [
-                { key: 'ca199', label: 'CA19-9', group: '肿瘤标记物', max: 37 },
-                { key: 'cea', label: 'CEA', group: '肿瘤标记物', max: 5 },
-                { key: 'ca125', label: 'CA125', group: '肿瘤标记物', max: 35 },
-                { key: 'ca153', label: 'CA15-3', group: '肿瘤标记物', max: 25 },
-                { key: 'cyfra', label: 'CYFRA', group: '肿瘤标记物', max: 3.3 },
-                { key: 'ca724', label: 'CA72-4', group: '肿瘤标记物', max: 6.9 },
-                { key: 'nse', label: 'NSE', group: '肿瘤标记物', max: 16.3 },
+                { key: 'ca199', label: 'CA19-9', group: '肿瘤标志物', max: 37 },
+                { key: 'cea', label: 'CEA', group: '肿瘤标志物', max: 5 },
+                { key: 'ca125', label: 'CA125', group: '肿瘤标志物', max: 35 },
+                { key: 'ca153', label: 'CA15-3', group: '肿瘤标志物', max: 25 },
+                { key: 'cyfra', label: 'CYFRA', group: '肿瘤标志物', max: 3.3 },
+                { key: 'ca724', label: 'CA72-4', group: '肿瘤标志物', max: 6.9 },
+                { key: 'nse', label: 'NSE', group: '肿瘤标志物', max: 16.3 },
                 { key: 'alt', label: 'ALT', group: '肝功能', min: 0, max: 40 },
                 { key: 'ast', label: 'AST', group: '肝功能', min: 0, max: 40 },
                 { key: 'alp', label: 'ALP', group: '肝功能', min: 45, max: 125 },
@@ -255,11 +292,10 @@
             ]
         };
 
-        // --- State ---
         let currentTab = 'blood';
         let currentSettingsTab = 'blood'; 
         let isFormOpen = false;
-        let editingId = null; // Track ID of row being edited
+        let editingId = null; 
         
         let bloodData = JSON.parse(localStorage.getItem('bloodData')) || [];
         let compData = JSON.parse(localStorage.getItem('compData')) || [];
@@ -267,16 +303,21 @@
         let activeConfig = JSON.parse(localStorage.getItem('medicalTrackerConfig')) || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
         let tempConfig = null; 
 
+        // 定义标签页的激活与非激活样式
+        const tabActiveClasses = "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative overflow-hidden bg-white text-brand-600 shadow-soft";
+        const tabInactiveClasses = "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-300 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50";
+
+
         function init() {
             lucide.createIcons();
             switchTab('blood');
         }
 
-        // --- Core Logic ---
+        // --- 恢复第一版的强对比度逻辑 ---
         function getGradientStyle(val, min, max) {
-            if (!val || val === '-') return { class: 'text-gray-800', icon: '' };
+            if (!val || val === '-') return { class: 'text-slate-800', icon: '' };
             const num = parseFloat(val);
-            if (isNaN(num)) return { class: 'text-gray-800', icon: '' };
+            if (isNaN(num)) return { class: 'text-slate-800', icon: '' };
 
             if (max !== undefined && max !== null && max !== '' && num > max) {
                 const deviation = (num - max) / max;
@@ -292,7 +333,7 @@
                 if (deviation < 0.5) return { class: 'bg-blue-400 text-white font-bold', icon: '↓' };
                 return { class: 'bg-blue-600 text-white font-bold', icon: '↓' }; 
             }
-            return { class: 'text-green-700', icon: '' };
+            return { class: 'text-emerald-700', icon: '' };
         }
 
         function getRangeText(min, max) {
@@ -302,12 +343,14 @@
             return '-';
         }
 
-        // --- Main UI ---
         function switchTab(tab) {
             currentTab = tab;
-            cancelEdit(); // Reset edit mode when switching tabs
-            document.getElementById('tab-blood').className = tab === 'blood' ? 'flex items-center gap-2 px-6 py-3 font-medium transition-colors tab-active' : 'flex items-center gap-2 px-6 py-3 font-medium transition-colors tab-inactive';
-            document.getElementById('tab-comp').className = tab === 'comp' ? 'flex items-center gap-2 px-6 py-3 font-medium transition-colors tab-active' : 'flex items-center gap-2 px-6 py-3 font-medium transition-colors tab-inactive';
+            cancelEdit();
+            
+            // 更新标签页样式
+            document.getElementById('tab-blood').className = tab === 'blood' ? tabActiveClasses : tabInactiveClasses;
+            document.getElementById('tab-comp').className = tab === 'comp' ? tabActiveClasses : tabInactiveClasses;
+            
             document.getElementById('table-blood').classList.toggle('hidden', tab !== 'blood');
             document.getElementById('table-comp').classList.toggle('hidden', tab !== 'comp');
             renderFormInputs();
@@ -322,7 +365,7 @@
             
             if (currentTab === 'comp') {
                 const groups = {};
-                const order = ['肿瘤标记物', '肝功能', '肾功能', '其他']; 
+                const order = ['肿瘤标志物', '肝功能', '肾功能', '其他']; 
                 fields.forEach(f => {
                     const g = f.group || '其他';
                     if(!groups[g]) groups[g] = [];
@@ -333,10 +376,10 @@
                 allGroups.forEach(gName => {
                     if (groups[gName] && groups[gName].length > 0) {
                         const h = document.createElement('div');
-                        h.className = "col-span-full font-bold text-gray-700 mt-2 border-b border-gray-100 pb-1 text-sm flex items-center gap-2";
-                        let colorClass = "text-gray-700";
+                        h.className = "col-span-full font-bold text-slate-700 mt-2 border-b border-slate-100 pb-1 text-sm flex items-center gap-2";
+                        let colorClass = "text-slate-700";
                         if(gName.includes('肿')) colorClass = "text-purple-700";
-                        if(gName.includes('肝')) colorClass = "text-yellow-700";
+                        if(gName.includes('肝')) colorClass = "text-amber-700";
                         if(gName.includes('肾')) colorClass = "text-blue-700";
                         h.innerHTML = `<span class="${colorClass}">${gName}</span>`;
                         container.appendChild(h);
@@ -352,9 +395,9 @@
             const div = document.createElement('div');
             div.className = "space-y-1";
             div.innerHTML = `
-                <label class="text-xs font-semibold text-gray-500 block truncate" title="${field.label}">${field.label}</label>
-                <input name="${field.key}" type="number" step="0.01" class="w-full p-2 border rounded text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
-                <div class="text-[10px] text-gray-400">参考: ${getRangeText(field.min, field.max)}</div>
+                <label class="text-xs font-bold text-slate-500 block truncate" title="${field.label}">${field.label}</label>
+                <input name="${field.key}" type="number" step="0.01" class="w-full p-2.5 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-500/50 transition-shadow bg-white">
+                <div class="text-[10px] text-slate-400">参考: ${getRangeText(field.min, field.max)}</div>
             `;
             return div;
         }
@@ -362,21 +405,20 @@
         function renderTableHeaders() {
             if (currentTab === 'blood') {
                 const tr = document.getElementById('thead-blood-row');
-                let html = `<th class="p-3 whitespace-nowrap sticky-col">周期</th><th class="p-3 whitespace-nowrap">日期</th><th class="p-3 whitespace-nowrap">方案</th>`;
+                let html = `<th class="p-3 whitespace-nowrap sticky-col bg-slate-50">周期</th><th class="p-3 whitespace-nowrap bg-slate-50">日期</th><th class="p-3 whitespace-nowrap bg-slate-50">方案</th>`;
                 
-                // 血常规指标颜色映射
                 const bloodColorMap = {
-                    'wbc': 'bg-blue-50 text-blue-900',
-                    'anc': 'bg-blue-50 text-blue-900',
-                    'hb': 'bg-red-50 text-red-900',
+                    'wbc': 'bg-sky-50 text-sky-900',
+                    'anc': 'bg-sky-50 text-sky-900',
+                    'hb': 'bg-rose-50 text-rose-900',
                     'plt': 'bg-orange-50 text-orange-900'
                 };
                 
                 activeConfig.blood.forEach(f => {
-                    const colorClass = bloodColorMap[f.key] || 'bg-gray-50';
-                    html += `<th class="p-3 whitespace-nowrap min-w-[80px] ${colorClass}">${f.label.split('(')[0]}<br/><span class="text-xs font-normal opacity-70">${f.label.match(/\((.*?)\)/)?.[1] || ''}</span></th>`;
+                    const colorClass = bloodColorMap[f.key] || 'bg-slate-50';
+                    html += `<th class="p-3 whitespace-nowrap min-w-[80px] ${colorClass} border-r border-slate-100">${f.label.split('(')[0]}<br/><span class="text-xs font-normal opacity-70">${f.label.match(/\((.*?)\)/)?.[1] || ''}</span></th>`;
                 });
-                html += `<th class="p-3 min-w-[150px]">备注</th><th class="p-3 w-20 no-print">操作</th>`;
+                html += `<th class="p-3 min-w-[150px] bg-slate-50">备注</th><th class="p-3 w-20 no-print bg-slate-50">操作</th>`;
                 tr.innerHTML = html;
             } else {
                 const tr1 = document.getElementById('thead-comp-row-1');
@@ -395,22 +437,22 @@
                     currentGroup.fields.push(f);
                 });
 
-                let html1 = `<th rowspan="2" class="p-2 border-r border-gray-200 bg-gray-100 sticky-col z-20">周期</th><th rowspan="2" class="p-2 border-r border-gray-200 min-w-[85px]">日期</th><th rowspan="2" class="p-2 border-r border-gray-200 min-w-[90px]">方案</th>`;
+                let html1 = `<th rowspan="2" class="p-2 border-r border-slate-200 bg-slate-100 sticky-col z-20">周期</th><th rowspan="2" class="p-2 border-r border-slate-200 min-w-[85px] bg-slate-50">日期</th><th rowspan="2" class="p-2 border-r border-slate-200 min-w-[90px] bg-slate-50">方案</th>`;
                 let html2 = ``;
 
                 orderedGroups.forEach(g => {
-                    let bgClass = "bg-gray-100";
-                    let textClass = "text-gray-900";
+                    let bgClass = "bg-slate-50";
+                    let textClass = "text-slate-900";
                     if(g.name.includes('肿')) { bgClass = "bg-purple-50"; textClass = "text-purple-900"; }
-                    else if(g.name.includes('肝')) { bgClass = "bg-yellow-50"; textClass = "text-yellow-900"; }
+                    else if(g.name.includes('肝')) { bgClass = "bg-amber-50"; textClass = "text-amber-900"; }
                     else if(g.name.includes('肾')) { bgClass = "bg-blue-50"; textClass = "text-blue-900"; }
 
-                    html1 += `<th colspan="${g.count}" class="p-1 ${bgClass} ${textClass} border-r border-gray-200 font-bold">${g.name}</th>`;
+                    html1 += `<th colspan="${g.count}" class="p-1 ${bgClass} ${textClass} border-r border-slate-200 font-bold">${g.name}</th>`;
                     g.fields.forEach(f => {
-                        html2 += `<th class="p-2 border-r border-gray-100 min-w-[50px] bg-opacity-50 ${bgClass}">${f.label}</th>`;
+                        html2 += `<th class="p-2 border-r border-slate-100 min-w-[50px] bg-opacity-50 ${bgClass}">${f.label}</th>`;
                     });
                 });
-                html1 += `<th rowspan="2" class="p-2 min-w-[100px]">备注</th><th rowspan="2" class="p-2 w-20 no-print">操作</th>`;
+                html1 += `<th rowspan="2" class="p-2 min-w-[100px] bg-slate-50">备注</th><th rowspan="2" class="p-2 w-20 no-print bg-slate-50">操作</th>`;
                 tr1.innerHTML = html1;
                 tr2.innerHTML = html2;
             }
@@ -424,43 +466,41 @@
             
             if (data.length === 0) {
                 const colSpan = fields.length + 5;
-                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-8 text-center text-gray-400">暂无数据</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-8 text-center text-slate-400">暂无数据</td></tr>`;
                 return;
             }
 
-            // 血常规指标背景颜色映射
             const bloodBgMap = {
-                'wbc': 'bg-blue-50/30',
-                'anc': 'bg-blue-50/30',
-                'hb': 'bg-red-50/30',
+                'wbc': 'bg-sky-50/30',
+                'anc': 'bg-sky-50/30',
+                'hb': 'bg-rose-50/30',
                 'plt': 'bg-orange-50/30'
             };
 
             data.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition-colors";
-                let html = `<td class="p-2 border-r border-gray-100 sticky-col bg-white font-medium">${row.cycle || '-'}</td><td class="p-2 whitespace-nowrap text-gray-600 border-r border-gray-100">${row.date || '-'}</td><td class="p-2 text-gray-600 border-r border-gray-100">${row.scheme || '-'}</td>`;
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100";
+                let html = `<td class="p-2 border-r border-slate-100 sticky-col bg-white font-bold text-slate-700 text-center">${row.cycle || '-'}</td><td class="p-2 whitespace-nowrap text-slate-600 border-r border-slate-100 text-center">${row.date || '-'}</td><td class="p-2 text-slate-600 border-r border-slate-100 text-center">${row.scheme || '-'}</td>`;
 
                 fields.forEach(f => {
                     const status = getGradientStyle(row[f.key], f.min, f.max);
-                    // 血常规用分类背景色，肿标/肝肾用异常状态色
                     let cellClass = status.class;
                     if (currentTab === 'blood' && status.icon === '' && bloodBgMap[f.key]) {
-                        cellClass = bloodBgMap[f.key] + ' text-gray-800';
+                        cellClass = bloodBgMap[f.key] + ' text-slate-800';
                     }
-                    html += `<td class="p-2 border-r border-gray-100 ${cellClass}">${row[f.key] || ''}</td>`;
+                    html += `<td class="p-2 border-r border-slate-100 ${cellClass} text-center">${row[f.key] || ''}</td>`;
                 });
 
                 const isFirst = index === 0;
                 const isLast = index === data.length - 1;
 
                 html += `
-                    <td class="p-2 text-gray-500 text-left text-xs">${row.remarks || ''}</td>
+                    <td class="p-2 text-slate-500 text-left text-xs">${row.remarks || ''}</td>
                     <td class="p-2 text-center no-print whitespace-nowrap">
-                        <button onclick="moveRow(${row.id}, -1)" class="text-gray-400 hover:text-green-600 transition-colors p-1 ${isFirst ? 'opacity-30 pointer-events-none' : ''}" title="上移"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                        <button onclick="moveRow(${row.id}, 1)" class="text-gray-400 hover:text-green-600 transition-colors p-1 ${isLast ? 'opacity-30 pointer-events-none' : ''}" title="下移"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-                        <button onclick="editRow(${row.id})" class="text-blue-400 hover:text-blue-600 transition-colors p-1" title="编辑"><i data-lucide="pencil" class="w-4 h-4"></i></button>
-                        <button onclick="deleteRow(${row.id})" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="删除"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${row.id}, -1)" class="text-slate-300 hover:text-brand-600 transition-colors p-1 ${isFirst ? 'opacity-30 pointer-events-none' : ''}"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
+                        <button onclick="moveRow(${row.id}, 1)" class="text-slate-300 hover:text-brand-600 transition-colors p-1 ${isLast ? 'opacity-30 pointer-events-none' : ''}"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                        <button onclick="editRow(${row.id})" class="text-blue-400 hover:text-blue-600 transition-colors p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        <button onclick="deleteRow(${row.id})" class="text-slate-300 hover:text-red-500 transition-colors p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>`;
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
@@ -468,69 +508,67 @@
             lucide.createIcons();
         }
 
-        // --- 数据行上移下移功能 ---
         function moveRow(id, direction) {
             const dataList = currentTab === 'blood' ? bloodData : compData;
             const index = dataList.findIndex(i => i.id === id);
-            
             if (index === -1) return;
-            
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= dataList.length) return;
-            
-            // 交换位置
             [dataList[index], dataList[newIndex]] = [dataList[newIndex], dataList[index]];
-            
-            // 保存到 localStorage
-            if (currentTab === 'blood') {
-                localStorage.setItem('bloodData', JSON.stringify(bloodData));
-            } else {
-                localStorage.setItem('compData', JSON.stringify(compData));
-            }
-            
+            if (currentTab === 'blood') { localStorage.setItem('bloodData', JSON.stringify(bloodData)); } 
+            else { localStorage.setItem('compData', JSON.stringify(compData)); }
             renderTableBody();
         }
 
-        // --- Editing Logic (New) ---
         function editRow(id) {
             const dataList = currentTab === 'blood' ? bloodData : compData;
             const item = dataList.find(i => i.id === id);
             if (!item) return;
 
-            // Open form if closed
             if (!isFormOpen) toggleForm();
             
-            // Populate standard
             document.querySelector('input[name="cycle"]').value = item.cycle || '';
             document.querySelector('input[name="date"]').value = item.date || '';
             document.querySelector('input[name="scheme"]').value = item.scheme || '';
             document.querySelector('input[name="remarks"]').value = item.remarks || '';
 
-            // Populate dynamic
             const fields = activeConfig[currentTab];
             fields.forEach(f => {
                 const input = document.querySelector(`input[name="${f.key}"]`);
                 if (input) input.value = item[f.key] || '';
             });
 
-            // Set state
             editingId = id;
-            document.getElementById('submit-btn').innerText = '更新数据';
-            document.getElementById('submit-btn').className = "bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded shadow-sm font-medium transition-colors";
-            document.getElementById('form-toggle-text').innerText = "正在编辑数据...";
+            
+            // 更新按钮和标题
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> 更新数据';
+            submitBtn.className = "w-full md:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-lg shadow-emerald-500/30 font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2";
+            
+            const formTitle = document.getElementById('form-title');
+            formTitle.innerText = "正在编辑数据...";
+            formTitle.className = "font-bold text-emerald-600 text-sm";
+            
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
-
-            // Scroll to form
             document.getElementById('dataForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            lucide.createIcons();
         }
 
         function cancelEdit() {
             editingId = null;
             document.getElementById('dataForm').reset();
-            document.getElementById('submit-btn').innerText = '保存数据';
-            document.getElementById('submit-btn').className = "bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded shadow-sm font-medium transition-colors";
-            document.getElementById('form-toggle-text').innerText = isFormOpen ? "收起录入表单" : "录入新数据";
+            
+            // 恢复按钮和标题
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> 保存记录';
+            submitBtn.className = "w-full md:w-auto px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-500/30 font-bold text-sm transition-all transform active:scale-95 flex items-center justify-center gap-2";
+            
+            const formTitle = document.getElementById('form-title');
+            formTitle.innerText = "录入新数据";
+            formTitle.className = "font-bold text-slate-700 text-sm";
+            
             document.getElementById('cancel-edit-btn').classList.add('hidden');
+            lucide.createIcons();
         }
 
         function handleFormSubmit(e) {
@@ -539,7 +577,6 @@
             const data = Object.fromEntries(formData.entries());
 
             if (editingId) {
-                // Update existing
                 data.id = editingId;
                 if (currentTab === 'blood') {
                     const idx = bloodData.findIndex(i => i.id === editingId);
@@ -553,7 +590,6 @@
                 cancelEdit();
                 alert('数据已更新');
             } else {
-                // Create new
                 data.id = Date.now();
                 if (currentTab === 'blood') {
                     bloodData.push(data);
@@ -567,20 +603,31 @@
             renderTableBody();
         }
 
-        // --- Standard Logic ---
         function toggleForm() {
             isFormOpen = !isFormOpen;
-            const f = document.getElementById('dataForm');
-            f.classList.toggle('hidden', !isFormOpen);
-            document.getElementById('form-icon').style.transform = isFormOpen ? 'rotate(180deg)' : 'rotate(0)';
-            if (!editingId) document.getElementById('form-toggle-text').innerText = isFormOpen ? '收起录入表单' : '录入新数据';
+            const form = document.getElementById('dataForm');
+            
+            // 获取图标元素
+            const icon = document.getElementById('form-chevron');
+            const plus = document.getElementById('form-icon-plus');
+            
+            if (isFormOpen) {
+                form.classList.remove('hidden');
+                // 展开状态：箭头旋转180度，加号旋转45度变成叉号
+                if(icon) icon.style.transform = 'rotate(180deg)';
+                if(plus) plus.style.transform = 'rotate(45deg)';
+            } else {
+                form.classList.add('hidden');
+                // 收起状态：恢复原始角度
+                if(icon) icon.style.transform = 'rotate(0)';
+                if(plus) plus.style.transform = 'rotate(0)';
+            }
         }
 
         function deleteRow(id) {
             if (!confirm('确定删除此条记录？')) return;
             if (currentTab === 'blood') { bloodData = bloodData.filter(i => i.id != id); localStorage.setItem('bloodData', JSON.stringify(bloodData)); } 
             else { compData = compData.filter(i => i.id != id); localStorage.setItem('compData', JSON.stringify(compData)); }
-            // If deleting the row currently being edited, cancel edit
             if (id === editingId) cancelEdit();
             renderTableBody();
         }
@@ -604,7 +651,6 @@
             link.click();
         }
 
-        // --- 生成图片功能 ---
         function exportToImage() {
             const tableId = currentTab === 'blood' ? 'table-blood' : 'table-comp';
             const table = document.getElementById(tableId);
@@ -615,89 +661,58 @@
                 return;
             }
 
-            // 显示加载提示
             const loadingDiv = document.createElement('div');
             loadingDiv.id = 'loading-overlay';
             loadingDiv.className = 'fixed inset-0 bg-black/50 z-[100] flex items-center justify-center';
             loadingDiv.innerHTML = `
-                <div class="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center gap-3">
-                    <div class="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-gray-700 font-medium">正在生成图片...</span>
+                <div class="bg-white rounded-xl p-6 shadow-xl flex flex-col items-center gap-3">
+                    <div class="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-slate-700 font-medium">正在生成图片...</span>
                 </div>
             `;
             document.body.appendChild(loadingDiv);
 
-            // 创建临时容器用于渲染
             const container = document.createElement('div');
             container.style.cssText = 'position: absolute; left: -9999px; top: 0; background: white; padding: 20px;';
             
-            // 添加标题
             const title = document.createElement('h2');
-            title.style.cssText = 'font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #1f2937; text-align: center;';
+            title.style.cssText = 'font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #0f766e; text-align: center; font-family: sans-serif;';
             title.textContent = currentTab === 'blood' ? '血常规检查记录' : '肿瘤标志物/肝肾功能检查记录';
             container.appendChild(title);
 
-            // 添加日期
             const dateInfo = document.createElement('p');
-            dateInfo.style.cssText = 'font-size: 12px; color: #6b7280; margin-bottom: 15px; text-align: center;';
+            dateInfo.style.cssText = 'font-size: 12px; color: #64748b; margin-bottom: 15px; text-align: center; font-family: sans-serif;';
             dateInfo.textContent = '导出时间: ' + new Date().toLocaleString('zh-CN');
             container.appendChild(dateInfo);
 
-            // 手动构建新表格确保列顺序正确
             const newTable = document.createElement('table');
-            newTable.style.cssText = 'border-collapse: collapse; font-size: 12px;';
+            newTable.style.cssText = 'border-collapse: collapse; font-size: 12px; font-family: sans-serif;';
             
             const fields = activeConfig[currentTab];
             
-            // 血常规颜色映射
-            const bloodHeaderColors = {
-                'wbc': { bg: '#eff6ff', color: '#1e3a8a' },
-                'anc': { bg: '#eff6ff', color: '#1e3a8a' },
-                'hb': { bg: '#fef2f2', color: '#7f1d1d' },
-                'plt': { bg: '#fff7ed', color: '#7c2d12' }
-            };
-            const bloodCellColors = {
-                'wbc': '#eff6ff',
-                'anc': '#eff6ff', 
-                'hb': '#fef2f2',
-                'plt': '#fff7ed'
-            };
-
-            // 构建表头
             if (currentTab === 'blood') {
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
-                
-                // 固定列：周期、日期、方案
                 ['周期', '日期', '方案'].forEach(text => {
                     const th = document.createElement('th');
                     th.textContent = text;
-                    th.style.cssText = 'border: 1px solid #d1d5db; padding: 8px 12px; background-color: #f3f4f6; font-weight: 600; text-align: center;';
+                    th.style.cssText = 'border: 1px solid #cbd5e1; padding: 8px 12px; background-color: #f8fafc; font-weight: 600; text-align: center; color: #334155;';
                     headerRow.appendChild(th);
                 });
-                
-                // 动态指标列
                 fields.forEach(f => {
                     const th = document.createElement('th');
                     th.innerHTML = f.label.split('(')[0] + '<br><span style="font-size:10px;opacity:0.7;font-weight:normal;">' + (f.label.match(/\((.*?)\)/)?.[1] || '') + '</span>';
-                    const colors = bloodHeaderColors[f.key] || { bg: '#f3f4f6', color: '#1f2937' };
-                    th.style.cssText = `border: 1px solid #d1d5db; padding: 8px 12px; background-color: ${colors.bg}; color: ${colors.color}; font-weight: 600; text-align: center;`;
+                    th.style.cssText = `border: 1px solid #cbd5e1; padding: 8px 12px; background-color: #f0f9ff; color: #0f172a; font-weight: 600; text-align: center;`;
                     headerRow.appendChild(th);
                 });
-                
-                // 备注列
                 const remarkTh = document.createElement('th');
                 remarkTh.textContent = '备注';
-                remarkTh.style.cssText = 'border: 1px solid #d1d5db; padding: 8px 12px; background-color: #f3f4f6; font-weight: 600; text-align: center;';
+                remarkTh.style.cssText = 'border: 1px solid #cbd5e1; padding: 8px 12px; background-color: #f8fafc; font-weight: 600; text-align: center; color: #334155;';
                 headerRow.appendChild(remarkTh);
-                
                 thead.appendChild(headerRow);
                 newTable.appendChild(thead);
             } else {
-                // 肿标/肝肾 - 双行表头
                 const thead = document.createElement('thead');
-                
-                // 分组信息
                 const groups = {};
                 const orderedGroups = [];
                 let currentGroup = null;
@@ -710,47 +725,33 @@
                     currentGroup.count++;
                     currentGroup.fields.push(f);
                 });
-                
-                // 第一行：分组标题
                 const row1 = document.createElement('tr');
                 ['周期', '日期', '方案'].forEach(text => {
                     const th = document.createElement('th');
                     th.textContent = text;
                     th.rowSpan = 2;
-                    th.style.cssText = 'border: 1px solid #d1d5db; padding: 6px 8px; background-color: #f3f4f6; font-weight: 600; text-align: center; font-size: 11px;';
+                    th.style.cssText = 'border: 1px solid #cbd5e1; padding: 6px 8px; background-color: #f8fafc; font-weight: 600; text-align: center; font-size: 11px; color: #334155;';
                     row1.appendChild(th);
                 });
-                
-                const groupColors = {
-                    '肿瘤标记物': { bg: '#faf5ff', color: '#581c87' },
-                    '肝功能': { bg: '#fefce8', color: '#713f12' },
-                    '肾功能': { bg: '#eff6ff', color: '#1e3a8a' }
-                };
-                
                 orderedGroups.forEach(g => {
                     const th = document.createElement('th');
                     th.textContent = g.name;
                     th.colSpan = g.count;
-                    const colors = groupColors[g.name] || { bg: '#f3f4f6', color: '#1f2937' };
-                    th.style.cssText = `border: 1px solid #d1d5db; padding: 4px 6px; background-color: ${colors.bg}; color: ${colors.color}; font-weight: 600; text-align: center; font-size: 11px;`;
+                    th.style.cssText = `border: 1px solid #cbd5e1; padding: 4px 6px; background-color: #f1f5f9; color: #334155; font-weight: 600; text-align: center; font-size: 11px;`;
                     row1.appendChild(th);
                 });
-                
                 const remarkTh1 = document.createElement('th');
                 remarkTh1.textContent = '备注';
                 remarkTh1.rowSpan = 2;
-                remarkTh1.style.cssText = 'border: 1px solid #d1d5db; padding: 6px 8px; background-color: #f3f4f6; font-weight: 600; text-align: center; font-size: 11px;';
+                remarkTh1.style.cssText = 'border: 1px solid #cbd5e1; padding: 6px 8px; background-color: #f8fafc; font-weight: 600; text-align: center; font-size: 11px; color: #334155;';
                 row1.appendChild(remarkTh1);
                 thead.appendChild(row1);
-                
-                // 第二行：具体指标
                 const row2 = document.createElement('tr');
                 orderedGroups.forEach(g => {
-                    const colors = groupColors[g.name] || { bg: '#f3f4f6', color: '#1f2937' };
                     g.fields.forEach(f => {
                         const th = document.createElement('th');
                         th.textContent = f.label;
-                        th.style.cssText = `border: 1px solid #d1d5db; padding: 4px 6px; background-color: ${colors.bg}; color: ${colors.color}; font-weight: 500; text-align: center; font-size: 10px;`;
+                        th.style.cssText = `border: 1px solid #cbd5e1; padding: 4px 6px; background-color: #f8fafc; color: #334155; font-weight: 500; text-align: center; font-size: 10px;`;
                         row2.appendChild(th);
                     });
                 });
@@ -758,28 +759,21 @@
                 newTable.appendChild(thead);
             }
 
-            // 构建表体
             const tbody = document.createElement('tbody');
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                
-                // 固定列：周期、日期、方案
                 [row.cycle || '-', row.date || '-', row.scheme || '-'].forEach((val, idx) => {
                     const td = document.createElement('td');
                     td.textContent = val;
-                    td.style.cssText = 'border: 1px solid #d1d5db; padding: 6px 10px; text-align: center;' + (idx === 0 ? 'font-weight: 500;' : '');
+                    td.style.cssText = 'border: 1px solid #cbd5e1; padding: 6px 10px; text-align: center; color: #334155;';
                     tr.appendChild(td);
                 });
-                
-                // 动态指标列
                 fields.forEach(f => {
                     const td = document.createElement('td');
                     td.textContent = row[f.key] || '';
                     const status = getGradientStyle(row[f.key], f.min, f.max);
-                    
                     let bgColor = '#ffffff';
-                    let textColor = '#1f2937';
-                    
+                    let textColor = '#334155';
                     if (status.class.includes('red-100')) { bgColor = '#fee2e2'; textColor = '#991b1b'; }
                     else if (status.class.includes('red-200')) { bgColor = '#fecaca'; textColor = '#991b1b'; }
                     else if (status.class.includes('red-400')) { bgColor = '#f87171'; textColor = '#ffffff'; }
@@ -788,35 +782,25 @@
                     else if (status.class.includes('blue-200')) { bgColor = '#bfdbfe'; textColor = '#1e40af'; }
                     else if (status.class.includes('blue-400')) { bgColor = '#60a5fa'; textColor = '#ffffff'; }
                     else if (status.class.includes('blue-600')) { bgColor = '#2563eb'; textColor = '#ffffff'; }
-                    else if (status.class.includes('green')) { textColor = '#15803d'; }
-                    else if (currentTab === 'blood' && bloodCellColors[f.key]) {
-                        bgColor = bloodCellColors[f.key];
-                    }
-                    
-                    td.style.cssText = `border: 1px solid #d1d5db; padding: 6px 10px; text-align: center; background-color: ${bgColor}; color: ${textColor};`;
+                    td.style.cssText = `border: 1px solid #cbd5e1; padding: 6px 10px; text-align: center; background-color: ${bgColor}; color: ${textColor};`;
                     tr.appendChild(td);
                 });
-                
-                // 备注列
                 const remarkTd = document.createElement('td');
                 remarkTd.textContent = row.remarks || '';
-                remarkTd.style.cssText = 'border: 1px solid #d1d5db; padding: 6px 10px; text-align: left; font-size: 11px; color: #6b7280;';
+                remarkTd.style.cssText = 'border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left; font-size: 11px; color: #64748b;';
                 tr.appendChild(remarkTd);
-                
                 tbody.appendChild(tr);
             });
             newTable.appendChild(tbody);
             container.appendChild(newTable);
 
-            // 添加图例说明
             const legend = document.createElement('div');
-            legend.style.cssText = 'margin-top: 15px; font-size: 11px; color: #6b7280; text-align: center;';
-            legend.innerHTML = '说明: <span style="color: #dc2626; font-weight: bold;">红色</span> = 偏高 | <span style="color: #2563eb; font-weight: bold;">蓝色</span> = 偏低 | <span style="color: #15803d;">绿色</span> = 正常';
+            legend.style.cssText = 'margin-top: 15px; font-size: 11px; color: #64748b; text-align: center; font-family: sans-serif;';
+            legend.innerHTML = '说明: <span style="color: #dc2626; font-weight: bold;">红色</span> = 偏高 | <span style="color: #2563eb; font-weight: bold;">蓝色</span> = 偏低';
             container.appendChild(legend);
 
             document.body.appendChild(container);
 
-            // 使用 html2canvas 生成图片
             setTimeout(() => {
                 html2canvas(container, {
                     scale: 2,
@@ -824,13 +808,10 @@
                     logging: false,
                     useCORS: true
                 }).then(canvas => {
-                    // 下载图片
                     const link = document.createElement('a');
                     link.download = `${currentTab === 'blood' ? '血常规' : '肿标肝肾'}_记录_${new Date().toISOString().slice(0,10)}.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
-
-                    // 清理
                     document.body.removeChild(container);
                     document.body.removeChild(loadingDiv);
                 }).catch(err => {
@@ -851,12 +832,12 @@
             const tabB = document.getElementById('set-tab-blood');
             const tabC = document.getElementById('set-tab-comp');
             if (currentSettingsTab === 'blood') { 
-                tabB.className = "bg-blue-600 text-white shadow-sm px-4 py-1.5 rounded-md font-medium text-sm transition-all"; 
-                tabC.className = "text-gray-600 hover:bg-gray-100 px-4 py-1.5 rounded-md font-medium text-sm transition-all"; 
+                tabB.className = "bg-brand-600 text-white shadow-sm px-5 py-2 rounded-lg font-medium text-sm transition-all"; 
+                tabC.className = "text-slate-600 hover:bg-slate-100 px-5 py-2 rounded-lg font-medium text-sm transition-all"; 
                 document.getElementById('new-field-group-container').classList.add('hidden'); 
             } else { 
-                tabC.className = "bg-blue-600 text-white shadow-sm px-4 py-1.5 rounded-md font-medium text-sm transition-all"; 
-                tabB.className = "text-gray-600 hover:bg-gray-100 px-4 py-1.5 rounded-md font-medium text-sm transition-all"; 
+                tabC.className = "bg-brand-600 text-white shadow-sm px-5 py-2 rounded-lg font-medium text-sm transition-all"; 
+                tabB.className = "text-slate-600 hover:bg-slate-100 px-5 py-2 rounded-lg font-medium text-sm transition-all"; 
                 document.getElementById('new-field-group-container').classList.remove('hidden'); 
             }
             
@@ -865,21 +846,19 @@
             const list = tempConfig[currentSettingsTab];
             
             if (list.length === 0) { 
-                container.innerHTML = `<div class="col-span-full text-center text-gray-400 py-8">暂无指标</div>`; 
+                container.innerHTML = `<div class="col-span-full text-center text-slate-400 py-8">暂无指标</div>`; 
                 return; 
             }
 
             list.forEach((item, index) => {
                 const el = document.createElement('div');
-                // 使用与参考代码一致的简洁卡片样式
-                el.className = "p-3 bg-gray-50 rounded border border-gray-200";
+                el.className = "p-3 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-sm transition-shadow";
                 
-                // 构建分组标签（仅肿标/肝肾有分组）
                 let groupBadge = '';
                 if (currentSettingsTab === 'comp' && item.group) {
-                    let color = 'bg-gray-100 text-gray-600';
+                    let color = 'bg-slate-100 text-slate-600';
                     if (item.group.includes('肿')) color = 'bg-purple-50 text-purple-600';
-                    if (item.group.includes('肝')) color = 'bg-yellow-50 text-yellow-600';
+                    if (item.group.includes('肝')) color = 'bg-amber-50 text-amber-600';
                     if (item.group.includes('肾')) color = 'bg-blue-50 text-blue-600';
                     groupBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-medium ${color}">${item.group}</span>`;
                 }
@@ -888,33 +867,29 @@
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex-1 min-w-0">
                             <input type="text" value="${item.label}" onchange="updateField(${index}, 'label', this.value)" 
-                                   class="font-bold text-sm text-gray-700 w-full bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none truncate">
+                                   class="font-bold text-sm text-slate-700 w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-brand-500 outline-none truncate transition-colors">
                             <div class="mt-1">${groupBadge}</div>
                         </div>
-                        <button onclick="removeField(${index})" class="text-gray-400 hover:text-red-500 ml-2 shrink-0" title="删除">
+                        <button onclick="removeField(${index})" class="text-slate-400 hover:text-red-500 ml-2 shrink-0" title="删除">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
                     <div class="flex gap-2 items-center mb-2">
                         <input type="number" step="0.01" name="${item.key}_min" value="${item.min !== undefined ? item.min : ''}" 
                                onchange="updateField(${index}, 'min', this.value)"
-                               placeholder="下限" class="w-20 p-1 border rounded text-sm outline-none focus:ring-1 focus:ring-blue-500">
-                        <span class="text-gray-400">-</span>
+                               placeholder="下限" class="w-20 p-1.5 border border-slate-200 rounded text-xs outline-none focus:ring-1 focus:ring-brand-500 bg-white">
+                        <span class="text-slate-400">-</span>
                         <input type="number" step="0.01" name="${item.key}_max" value="${item.max !== undefined ? item.max : ''}" 
                                onchange="updateField(${index}, 'max', this.value)"
-                               placeholder="上限" class="w-20 p-1 border rounded text-sm outline-none focus:ring-1 focus:ring-blue-500">
+                               placeholder="上限" class="w-20 p-1.5 border border-slate-200 rounded text-xs outline-none focus:ring-1 focus:ring-brand-500 bg-white">
                     </div>
-                    <div class="flex justify-between items-center pt-2 border-t border-gray-200">
-                        <span class="text-[10px] text-gray-400">#${index + 1}</span>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                        <span class="text-[10px] text-slate-400">#${index + 1}</span>
                         <div class="flex gap-1">
-                            <button onclick="moveField(${index}, -1)" 
-                                    class="px-2 py-1 rounded bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 text-xs ${index === 0 ? 'opacity-30 pointer-events-none' : ''}" 
-                                    title="上移">
+                            <button onclick="moveField(${index}, -1)" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs ${index === 0 ? 'opacity-30 pointer-events-none' : ''}" title="上移">
                                 <i data-lucide="chevron-left" class="w-3 h-3"></i>
                             </button>
-                            <button onclick="moveField(${index}, 1)" 
-                                    class="px-2 py-1 rounded bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 text-xs ${index === list.length - 1 ? 'opacity-30 pointer-events-none' : ''}" 
-                                    title="下移">
+                            <button onclick="moveField(${index}, 1)" class="px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs ${index === list.length - 1 ? 'opacity-30 pointer-events-none' : ''}" title="下移">
                                 <i data-lucide="chevron-right" class="w-3 h-3"></i>
                             </button>
                         </div>
@@ -970,7 +945,6 @@
             tempConfig[currentSettingsTab].push(n); 
             renderSettingsList();
             
-            // 清空输入框
             document.getElementById('new-field-label').value = '';
             document.getElementById('new-field-min').value = '';
             document.getElementById('new-field-max').value = '';
